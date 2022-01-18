@@ -12,7 +12,7 @@
     <td> Build Status </td>
     <td>
       <a href="https://ci.appveyor.com/project/gisly/lingcorpora-py"/>
-      <img src="https://ci.appveyor.com/api/projects/status/github/lingcorpora/lingcorpora.py?svg=true"/>
+      <img src="https://ci.appveyor.com/api/projects/status/vpio6f7845emaxyn?svg=true"/>
     </td>
   </tr>
   <tr>
