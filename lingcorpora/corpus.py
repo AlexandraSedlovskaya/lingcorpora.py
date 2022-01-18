@@ -2,7 +2,8 @@
 # coding=<UTF-8>
 
 import warnings
-from collections import Iterable, deque
+from collections import deque
+from collections.abc import Iterable
 
 from tqdm import tqdm
 
