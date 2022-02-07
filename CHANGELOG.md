@@ -1,3 +1,8 @@
+### Release 2.1
+Released 07.02.2021
+
+* Fixed bugs with Python v3.9
+
 ### Release 2.0
 Released 22.06.2019
 
