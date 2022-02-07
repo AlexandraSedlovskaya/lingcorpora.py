@@ -1,6 +1,6 @@
 from .corpus import Corpus
 
-__version__ = '2.0'
+__version__ = '2.1'
 
 __citation__ = \
 '''
