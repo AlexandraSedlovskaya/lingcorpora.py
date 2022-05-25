@@ -629,7 +629,7 @@ class PageParser(Container):
         soup = BeautifulSoup(req.content, 'lxml')
 
         docs =[]
-        for line in soup.find_all(string=re.compile('\s*' + markup + '\s*')):
+        for line in soup.find_all(string=re.compile('\s*' + markup + '\s*$')):
             if self.n_results == 0:
                 break
             else:
@@ -687,8 +687,10 @@ class PageParser(Container):
                         if self.n_results == 0:
                             break
                         else:
-                            texts.extend(self.__get_lines_markup('https://processing.ruscorpora.ru' + url_part,
-                                                    re.sub(r'\*', r'\\*', '\xa0'.join(self.subcorpus['s_sp_frm_sch'][0].split()))))
+                            new_line = '\xa0'.join(self.subcorpus['s_sp_frm_sch'][0].split()).replace('*', '\*')
+                            new_line = new_line.replace('?', '.')
+                            new_line = new_line.replace('|', '\|')
+                            texts.extend(self.__get_lines_markup('https://processing.ruscorpora.ru' + url_part, new_line))
         return texts
 
     def extract(self):
