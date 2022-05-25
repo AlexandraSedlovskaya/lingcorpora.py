@@ -633,7 +633,7 @@ class PageParser(Container):
             if self.n_results == 0:
                 break
             else:
-                doc = {'text': line.find_next('td').text.strip(), 'meta': soup.find(class_='b-doc-expl').text.strip(), 'idxs': (0,0)}
+                doc = {'text': line.text.strip() + ': ' + line.find_next('td').text.strip(), 'meta': soup.find(class_='b-doc-expl').text.strip(), 'idxs': (0,0)}
                 if self.get_analysis:
                     doc['analysis'] = self.__ana(soup.find(class_='b-doc-expl')['explain'])
                 else:
