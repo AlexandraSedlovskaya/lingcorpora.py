@@ -578,9 +578,7 @@ class PageParser(Container):
         req = requests.get(link)
         time.sleep(randint(1, 2))
         if req.status_code == 429:
-            print('waiting 10 sec')
             time.sleep(10)
-            print('done waiting')
             req = requests.get(link)
         soup = BeautifulSoup(req.content, 'html.parser')
         soup = self.__clean_soup(soup)
