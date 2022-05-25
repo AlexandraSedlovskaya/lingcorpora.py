@@ -32,7 +32,8 @@ exact: bool, default True
 subcorpus: dict, default None
     subcorpus parameters:
         ['doc_genre_fi', 'doc_language', 'doc_meter', 'doc_feet', 'doc_clausula',
-         'doc_strophe', 'doc_strophe_gr', 'doc_rhyme', 'doc_extra', 's_sp_frm_sch']
+         'doc_strophe', 'doc_strophe_gr', 'doc_rhyme', 'doc_extra', 's_sp_frm_sch',
+         'doc_i_ge_end_year', 'doc_i_le_start_year', 'doc_i_ge_end_year_x', 'doc_i_le_start_year_x' ]
          
 Example
 
@@ -85,6 +86,10 @@ Example
 GR_TAGS_INFO = \
     """
 Поиск по подкорпусу:
+
+    Поиск с x-года (doc_i_ge_end_year) по n-год(doc_i_le_start_year)
+    Точный поиск с x-года (doc_i_ge_end_year_x) по n-год(doc_i_le_start_year_x)
+    
     Жанр текста (doc_genre_fi):
         стихотворение
         акростих
@@ -384,12 +389,13 @@ TEST_DATA = {'test_single_query': {'query': 'мост'},
 
 
 class PageParser(Container):
-    def __init__(self, *args, stress=False, exact=True, markup=False, **kwargs):
+    def __init__(self, *args, stress=False, exact=True, markup=False, get_lines=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.__page = 0
         self.__stress = stress
         self.__exact = exact
         self.__markup = markup
+        self.__get_lines = get_lines
 
         self.__pattern = re.compile('(\s*[,?!\.:;―\-«»\"\'\'\[\]\(\)]+\s*)')
 
@@ -431,7 +437,12 @@ class PageParser(Container):
         subcorp = ''
         if self.subcorpus:
             for key, value in self.subcorpus.items():
-                subcorp += key + '=' + '|'.join(value) + '&'
+                if type(value[0]) == int:
+                    subcorp += key + '=' + str(value) + '&'
+                elif key == 's_sp_frm_sch':
+                    subcorp += key + '=' + '+'.join(value[0].split()) + '&'
+                else:
+                    subcorp += key + '=' + '|'.join(value) + '&'
         return subcorp
 
     def __get_subcorp(self):
@@ -609,6 +620,28 @@ class PageParser(Container):
             doc['analysis'] = []
         return doc
 
+    def __get_lines_markup(self, link, markup):
+        req = requests.get(link)
+        time.sleep(randint(1, 2))
+        if req.status_code == 429:
+            time.sleep(10)
+            req = requests.get(link)
+        soup = BeautifulSoup(req.content, 'lxml')
+
+        docs =[]
+        for line in soup.find_all(string=re.compile('\s*' + markup + '\s*')):
+            if self.n_results == 0:
+                break
+            else:
+                doc = {'text': line.find_next('td').text.strip(), 'meta': soup.find(class_='b-doc-expl').text.strip(), 'idxs': (0,0)}
+                if self.get_analysis:
+                    doc['analysis'] = self.__ana(soup.find(class_='b-doc-expl')['explain'])
+                else:
+                    doc['analysis'] = []
+                docs.append(doc)
+                self.n_results -= 1
+        return docs
+
     def __get_results(self):
         texts = []
         if self.query:
@@ -634,31 +667,25 @@ class PageParser(Container):
         else:
             while self.n_results != 0:
                 subcorp_soup = self.__get_subcorp()
+                if len(subcorp_soup.find_all(class_='b-kwic-expl')) == 0:
+                    break
                 self.__page += 1
-                if self.n_results >= len(subcorp_soup.find_all(class_='b-kwic-expl')):
-                    self.n_results -= len(subcorp_soup.find_all(class_='b-kwic-expl'))
-                    for text in subcorp_soup.find_all(class_='b-kwic-expl'):
-                        if not self.__stress:
-                            url_part = text['href']
-                        else:
-                            url_list = text['href'].split('&')
-                            i = url_list.index('nodia=1')
-                            url_list[i] = 'nodia=0'
-                            url_part = '&'.join(url_list)
+                for text in subcorp_soup.find_all(class_='b-kwic-expl'):
+                    if not self.__stress and not self.__get_lines:
+                        url_part = text['href']
+                    else:
+                        url_list = text['href'].split('&')
+                        i = url_list.index('nodia=1')
+                        url_list[i] = 'nodia=0'
+                        url_part = '&'.join(url_list)
+                    if not self.__get_lines:
                         texts.append(self.__parse_text_page('https://processing.ruscorpora.ru' + url_part))
-
-                else:
-                    for text in subcorp_soup.find_all(class_='b-kwic-expl')[:self.n_results]:
-                        if not self.__stress:
-                            url_part = text['href']
-                        else:
-                            url_list = text['href'].split('&')
-                            i = url_list.index('nodia=1')
-                            url_list[i] = 'nodia=0'
-                            url_part = '&'.join(url_list)
-                        texts.append(self.__parse_text_page('https://processing.ruscorpora.ru' + url_part))
-                    self.n_results = 0
-
+                        self.n_results -= 1
+                        if self.n_results == 0:
+                            break
+                    else:
+                        texts.extend(self.__get_lines_markup('https://processing.ruscorpora.ru' + url_part,
+                                                re.sub(r'\*', r'\\*', '\xa0'.join(self.subcorpus['s_sp_frm_sch'][0].split()))))
         return texts
 
     def extract(self):
