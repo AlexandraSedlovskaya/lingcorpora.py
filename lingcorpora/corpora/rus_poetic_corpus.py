@@ -397,7 +397,7 @@ class PageParser(Container):
         self.__markup = markup
         self.__get_lines = get_lines
 
-        self.__pattern = re.compile('(\s*[,?!\.:;―\-«»\"\'\'\[\]\(\)]+\s*)')
+        self.__pattern = re.compile('(\s*[,?!\.:;―\-«»\"\'\'\[\]\(\)…]+\s*)')
 
         self.__subcorp_url = 'https://processing.ruscorpora.ru/search.xml?env=alpha&mode=poetic&sort=i_grtagging&lang=ru&spd=1&text=meta&is_subcorpus=1&dpp=50&'
 
@@ -684,8 +684,11 @@ class PageParser(Container):
                         if self.n_results == 0:
                             break
                     else:
-                        texts.extend(self.__get_lines_markup('https://processing.ruscorpora.ru' + url_part,
-                                                re.sub(r'\*', r'\\*', '\xa0'.join(self.subcorpus['s_sp_frm_sch'][0].split()))))
+                        if self.n_results == 0:
+                            break
+                        else:
+                            texts.extend(self.__get_lines_markup('https://processing.ruscorpora.ru' + url_part,
+                                                    re.sub(r'\*', r'\\*', '\xa0'.join(self.subcorpus['s_sp_frm_sch'][0].split()))))
         return texts
 
     def extract(self):
