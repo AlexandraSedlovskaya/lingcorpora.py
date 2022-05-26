@@ -457,6 +457,10 @@ class PageParser(Container):
         if not self.__markup:
             for elem in soup.findAll('td', class_='frm'):
                 elem.extract()
+        else:
+            for elem in soup.findAll('td', class_='frm'):
+                elem.string.replace_with('\n' + elem.text.strip() + '\t')
+
         for elem in soup.findAll('td', width='100%'):
             elem.replaceWithChildren()
         for elem in soup.findAll('tr'):
@@ -610,7 +614,8 @@ class PageParser(Container):
                 else:
                     sent.append(text)
             else:
-                sent.append(text.strip())
+                sent.append(text)
+        sent[0] = sent[0].strip()
         doc['text'] = ' '.join(sent)
         doc['meta'] = soup.find(class_='b-doc-expl').text.strip()
         doc['idxs'] = (0, 0)
