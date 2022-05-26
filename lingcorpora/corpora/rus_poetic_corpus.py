@@ -33,7 +33,7 @@ subcorpus: dict, default None
     subcorpus parameters:
         ['doc_genre_fi', 'doc_language', 'doc_meter', 'doc_feet', 'doc_clausula',
          'doc_strophe', 'doc_strophe_gr', 'doc_rhyme', 'doc_extra', 's_sp_frm_sch',
-         'doc_i_ge_end_year', 'doc_i_le_start_year', 'doc_i_ge_end_year_x', 'doc_i_le_start_year_x' ]
+         'doc_i_ge_end_year', 'doc_i_le_start_year', 'doc_i_ge_end_year_x', 'doc_i_le_start_year_x', 'doc_author_id ]
          
 Example
 
@@ -381,6 +381,7 @@ GR_TAGS_INFO = \
     Формула (s_sp_frm_sch):
         Формула строки совпадает со стандартной стиховедческой записью: метр + количество стоп/иктов/слогов + клаузула, например, Я6д.
         Также тонические и силлабо-тонические строки можно искать по схеме расположения иктов, например, 0*2*1*1*0
+    Имя автора (doc_author_id)
 """
 
 TEST_DATA = {'test_single_query': {'query': 'мост'},
