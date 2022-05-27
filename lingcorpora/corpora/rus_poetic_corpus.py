@@ -32,8 +32,9 @@ exact: bool, default True
 subcorpus: dict, default None
     subcorpus parameters:
         ['doc_genre_fi', 'doc_language', 'doc_meter', 'doc_feet', 'doc_clausula',
-         'doc_strophe', 'doc_strophe_gr', 'doc_rhyme', 'doc_extra', 's_sp_frm_sch',
-         'doc_i_ge_end_year', 'doc_i_le_start_year', 'doc_i_ge_end_year_x', 'doc_i_le_start_year_x', 'doc_author_id ]
+         'doc_strophe', 'doc_strophe_gr', 'doc_rhyme', 'doc_extra', 'doc_formula',
+         'doc_i_ge_end_year', 'doc_i_le_start_year', 'doc_i_ge_end_year_x', 'doc_i_le_start_year_x', 'doc_author_id',
+         'doc_sex', 's_sp_frm_sch']
          
 Example
 
@@ -218,7 +219,7 @@ GR_TAGS_INFO = \
         6+3
         6+4
         5+4
-    Клауза (doc_clausula):
+    Клаузула (doc_clausula):
         вольная
         ж, м
         д, м
@@ -378,10 +379,14 @@ GR_TAGS_INFO = \
             логаэдический дольник
         Прочее:
             внутрисловный перенос
-    Формула (s_sp_frm_sch):
+    Общая формула (doc_formula)
+    Формула для поиска по строке (s_sp_frm_sch):
         Формула строки совпадает со стандартной стиховедческой записью: метр + количество стоп/иктов/слогов + клаузула, например, Я6д.
         Также тонические и силлабо-тонические строки можно искать по схеме расположения иктов, например, 0*2*1*1*0
     Имя автора (doc_author_id)
+    Пол автора(doc_sex):
+        муж
+        жен
 """
 
 TEST_DATA = {'test_single_query': {'query': 'мост'},
