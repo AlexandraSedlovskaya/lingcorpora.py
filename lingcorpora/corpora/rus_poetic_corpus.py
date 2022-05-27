@@ -620,7 +620,7 @@ class PageParser(Container):
                 else:
                     sent.append(text)
             else:
-                sent.append(text)
+                sent.append(text.replace('\xa0', ' '))
         sent[0] = sent[0].strip()
         doc['text'] = ' '.join(sent)
         doc['meta'] = soup.find(class_='b-doc-expl').text.strip()
