@@ -29,6 +29,8 @@ markup: bool, default False
     whether to collect texts with line markup or not
 exact: bool, default True
     enable exact search or lexeme search
+get_text: bool, default True
+    whether to collect texts or not (for empty query)
 subcorpus: dict, default None
     subcorpus parameters:
         ['doc_genre_fi', 'doc_language', 'doc_meter', 'doc_feet', 'doc_clausula',
@@ -395,13 +397,14 @@ TEST_DATA = {'test_single_query': {'query': 'мост'},
 
 
 class PageParser(Container):
-    def __init__(self, *args, stress=False, exact=True, markup=False, get_lines=False, **kwargs):
+    def __init__(self, *args, stress=False, exact=True, markup=False, get_lines=False, get_text=True, **kwargs):
         super().__init__(*args, **kwargs)
         self.__page = 0
         self.__stress = stress
         self.__exact = exact
         self.__markup = markup
         self.__get_lines = get_lines
+        self.__get_text = get_text
 
         self.__pattern = re.compile('(\s*[,?!\.:;―\-«»\"\'\'\[\]\(\)…]+\s*)')
 
@@ -453,6 +456,10 @@ class PageParser(Container):
 
     def __get_subcorp(self):
         req = requests.get(self.__subcorp_url + self.__parse_sub_dict() + f'&p={self.__page}')
+        if req.status_code == 429:
+            while req.status_code == 429:
+                time.sleep(10)
+                req = requests.get(self.__subcorp_url + self.__parse_sub_dict() + f'&p={self.__page}')
         soup = BeautifulSoup(req.content, 'html.parser')
         return soup
 
@@ -504,11 +511,12 @@ class PageParser(Container):
         """
         ana = {}
 
-        time.sleep(randint(1, 2))
+        time.sleep(randint(0, 3))
         req = requests.get(self.__ana_url + source)
         if req.status_code == 429:
-            time.sleep(10)
-            req = requests.get(self.__ana_url + source)
+            while req.status_code == 429:
+                time.sleep(10)
+                req = requests.get(self.__ana_url + source)
         soup = BeautifulSoup(req.content, 'html.parser')
         for elem in soup.findAll('br'):
             elem.replaceWithChildren()
@@ -597,15 +605,15 @@ class PageParser(Container):
         Parser for text pages when query is empty
         """
         req = requests.get(link)
-        time.sleep(randint(1, 2))
+        time.sleep(randint(0, 3))
         if req.status_code == 429:
-            time.sleep(10)
-            req = requests.get(link)
+            while req.status_code == 429:
+                time.sleep(10)
+                req = requests.get(link)
         soup = BeautifulSoup(req.content, 'html.parser')
         soup = self.__clean_soup(soup)
 
         sent = []
-        doc = {}
         Start = soup.find(text=self.isStartComment)
         for text in Start.find_all_next(text=True):
             if self.isEndComment(text):
@@ -622,21 +630,16 @@ class PageParser(Container):
             else:
                 sent.append(text.replace('\xa0', ' '))
         sent[0] = sent[0].strip()
-        doc['text'] = ' '.join(sent)
-        doc['meta'] = soup.find(class_='b-doc-expl').text.strip()
-        doc['idxs'] = (0, 0)
-        if self.get_analysis:
-            doc['analysis'] = self.__ana(soup.find(class_='b-doc-expl')['explain'])
-        else:
-            doc['analysis'] = []
-        return doc
+        full_text = ' '.join(sent)
+        return full_text
 
     def __get_lines_markup(self, link, markup):
         req = requests.get(link)
-        time.sleep(randint(1, 2))
+        time.sleep(randint(0, 3))
         if req.status_code == 429:
-            time.sleep(10)
-            req = requests.get(link)
+            while req.status_code == 429:
+                time.sleep(10)
+                req = requests.get(link)
         soup = BeautifulSoup(req.content, 'lxml')
 
         docs =[]
@@ -690,7 +693,18 @@ class PageParser(Container):
                         url_list[i] = 'nodia=0'
                         url_part = '&'.join(url_list)
                     if not self.__get_lines:
-                        texts.append(self.__parse_text_page('https://processing.ruscorpora.ru' + url_part))
+                        doc = {}
+                        if self.__get_text:
+                            doc['text'] = self.__parse_text_page('https://processing.ruscorpora.ru' + url_part)
+                        else:
+                            doc['text'] = ''
+                        if self.get_analysis:
+                            doc['analysis'] = self.__ana(text.find_previous(class_='b-doc-expl')['explain'])
+                        else:
+                            doc['analysis'] = []
+                        doc['meta'] = text.find_previous(class_='b-doc-expl').text.strip()
+                        doc['idxs'] = (0, 0)
+                        texts.append(doc)
                         self.n_results -= 1
                         if self.n_results == 0:
                             break
